@@ -2,7 +2,8 @@
 
 import random
 import requests
-import json
+
+from collections import defaultdict
 
 elasticsearch_cluster = ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']
 elasticsearch_port = '9200'
@@ -12,10 +13,25 @@ def get_unassigned():
                         % (random.choice(elasticsearch_cluster), elasticsearch_port)
     response = requests.get('http://%s' % elasticsearch_url)
 
-    unassigned = []
+    full_response = []
+    index = []
+    for result in response.content.split('\n'):
+        full_response.append(result)
+    return full_response
 
-    for indexs in response.content.split('\n'):
-        unassigned.append(indexs)
-    return unassigned
-print(get_unassigned())
+def reroute():
+    for values in get_unassigned():
+        if values:
+            payload = {"commands":
+                       [{"allocate":
+                             {"index":values.split()[0],
+                              "shard":values.split()[1],
+                              "node":random.choice(elasticsearch_cluster),
+                              "allow_primary":1
+                              }
+                         }
+                        ]
+                   }
+            print payload
+print(reroute())
 
