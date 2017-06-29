@@ -2,8 +2,7 @@
 
 import random
 import requests
-
-from collections import defaultdict
+import json
 
 elasticsearch_cluster = ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']
 elasticsearch_port = '9200'
@@ -14,9 +13,9 @@ def get_unassigned():
     response = requests.get('http://%s' % elasticsearch_url)
 
     full_response = []
-    index = []
     for result in response.content.split('\n'):
-        full_response.append(result)
+        if 'UNASSIGNED' in result:
+            full_response.append(result)
     return full_response
 
 def reroute():
@@ -32,6 +31,9 @@ def reroute():
                          }
                         ]
                    }
-            print payload
+            elasticsearch_reroute = '%s:%s/_cluster/reroute' % (random.choice(elasticsearch_cluster),
+                                                                elasticsearch_port)
+            post_request = requests.post(elasticsearch_reroute, data=json.dumps(payload))
+    return post_request
 print(reroute())
 
