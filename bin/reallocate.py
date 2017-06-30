@@ -21,7 +21,7 @@ def elasticsearch_cluster():
                     cluster.append(data_server.split()[0])
         return cluster
     except Exception as e:
-        print('Is elasticsearch process running? on ' + elasticsearch_node )
+        print('Is elasticsearch process running on ' + elasticsearch_node + '?' )
         sys.exit(2)
 
 
