@@ -30,14 +30,13 @@ def get_unassigned():
     for result in response.content.split('\n'):
         if result:
             index_shard = result.split()[0] + ' ' + result.split()[1]
-            if 'STARTED' in result and index_shard not in duplicates:
+            if 'UNASSIGNED' in result and index_shard not in duplicates:
                 duplicates.append(index_shard)
                 full_response.append(result)
     return full_response
 print(len(get_unassigned()))
 
 def reroute():
-    x = 0
     for values in get_unassigned():
         if values:
             payload = {"commands":
@@ -50,12 +49,10 @@ def reroute():
                          }
                         ]
                    }
-            #elasticsearch_reroute = '%s:%s/_cluster/reroute' % (random.choice(elasticsearch_cluster()),
-             #                                                   elasticsearch_port)
-            #post_request = requests.post(elasticsearch_reroute, data=json.dumps(payload))
-            print(payload)
-            x += 1
-            print(x)
+            elasticsearch_reroute = '%s:%s/_cluster/reroute' % (random.choice(elasticsearch_cluster()),
+                                                                elasticsearch_port)
+            post_request = requests.post(elasticsearch_reroute, data=json.dumps(payload))
+            print(post_request)
 
 reroute()
 
