@@ -7,13 +7,15 @@ import sys
 
 elasticsearch_port = '9200'
 elasticsearch_node = raw_input('Enter ip of one node that is part of the elaticsearch cluster > ')
-
+elastic_session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(max_retries=10)
+elastic_session.mount('http://', adapter)
 
 def elasticsearch_cluster():
     cluster = []
     try:
         get_cluster = 'http://%s:%s/_cat/nodes?v\&h=ip,r' % (elasticsearch_node, elasticsearch_port)
-        response = requests.get(get_cluster)
+        response = elastic_session.get(get_cluster, timeout=5)
 
         for data_server in response.content.split('\n'):
             if data_server:
@@ -24,12 +26,11 @@ def elasticsearch_cluster():
         print(e, '\n\n  Is elasticsearch process running on ' + elasticsearch_node + '?' )
         sys.exit(2)
 
-
 def get_unassigned():
     if elasticsearch_cluster():
         elasticsearch_url = '%s:%s/_cat/shards?h=index,shard,prirep,state,unassigned.reason' \
                         % (random.choice(elasticsearch_cluster()), elasticsearch_port)
-        response = requests.get('http://%s' % elasticsearch_url)
+        response = elastic_session.get('http://%s' % elasticsearch_url, timeout=10)
         full_response = []
         duplicates = []
         for result in response.content.split('\n'):
@@ -42,7 +43,6 @@ def get_unassigned():
     else:
         print('Unable to get cluster information')
         sys.exit(1)
-
 
 def reroute():
     if get_unassigned():
@@ -58,9 +58,9 @@ def reroute():
                          }
                         ]
                     }
-                elasticsearch_reroute = '%s:%s/_cluster/reroute' % (random.choice(elasticsearch_cluster()),
+                elasticsearch_reroute = 'http://%s:%s/_cluster/reroute' % (random.choice(elasticsearch_cluster()),
                                                                 elasticsearch_port)
-                post_request = requests.post(elasticsearch_reroute, data=json.dumps(payload))
+                post_request = elastic_session.post(elasticsearch_reroute, data=json.dumps(payload), timeout=30)
                 print(post_request)
     else:
         print('No shards in UNASSIGNED state were found')
