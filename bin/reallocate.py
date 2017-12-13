@@ -14,12 +14,11 @@ elastic_session.mount('http://', adapter)
 def elasticsearch_cluster():
     cluster = []
     try:
-        get_cluster = 'http://%s:%s/_cat/nodes?v\&h=ip,r' % (elasticsearch_node, elasticsearch_port)
+        get_cluster = 'http://%s:%s/_cat/nodes?pretty' % (elasticsearch_node, elasticsearch_port)
         response = elastic_session.get(get_cluster, timeout=5)
-
         for data_server in response.content.split('\n'):
             if data_server:
-                if data_server.split()[1] == 'd':
+                if data_server.split()[0] and data_server.split()[0] not in cluster:
                     cluster.append(data_server.split()[0])
         return cluster
     except Exception as e:
@@ -28,7 +27,7 @@ def elasticsearch_cluster():
 
 def get_unassigned():
     if elasticsearch_cluster():
-        elasticsearch_url = '%s:%s/_cat/shards?h=index,shard,prirep,state,unassigned.reason' \
+        elasticsearch_url = 'http://%s:%s/_cat/shards?h=index,shard,prirep,state,unassigned.reason' \
                         % (random.choice(elasticsearch_cluster()), elasticsearch_port)
         response = elastic_session.get('http://%s' % elasticsearch_url, timeout=10)
         full_response = []
@@ -41,6 +40,7 @@ def get_unassigned():
                     full_response.append(result)
         return full_response
     else:
+        print(elasticsearch_cluster())
         print('Unable to get cluster information')
         sys.exit(1)
 
