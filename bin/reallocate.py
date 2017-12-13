@@ -29,7 +29,7 @@ def get_unassigned():
     if elasticsearch_cluster():
         elasticsearch_url = 'http://%s:%s/_cat/shards?h=index,shard,prirep,state,unassigned.reason' \
                         % (random.choice(elasticsearch_cluster()), elasticsearch_port)
-        response = elastic_session.get('%s' % elasticsearch_url, timeout=20)
+        response = elastic_session.get('%s' % elasticsearch_url, timeout=10)
         full_response = []
         duplicates = []
         for result in response.content.split('\n'):
@@ -49,11 +49,10 @@ def reroute():
         for values in get_unassigned():
             if values:
                 payload = {"commands":
-                       [{"allocate":
+                       [{"allocate_replica":
                              {"index":values.split()[0],
                               "shard":values.split()[1],
-                              "node":random.choice(elasticsearch_cluster()),
-                              "allow_primary":1
+                              "node":random.choice(elasticsearch_cluster())
                               }
                          }
                         ]
