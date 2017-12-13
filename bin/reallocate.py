@@ -29,7 +29,7 @@ def get_unassigned():
     if elasticsearch_cluster():
         elasticsearch_url = 'http://%s:%s/_cat/shards?h=index,shard,prirep,state,unassigned.reason' \
                         % (random.choice(elasticsearch_cluster()), elasticsearch_port)
-        response = elastic_session.get('http://%s' % elasticsearch_url, timeout=10)
+        response = elastic_session.get('%s' % elasticsearch_url, timeout=20)
         full_response = []
         duplicates = []
         for result in response.content.split('\n'):
